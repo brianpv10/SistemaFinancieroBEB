@@ -1,0 +1,102 @@
+-- Eliminar tablas anteriores
+DROP TABLE IF EXISTS transaccion;
+DROP TABLE IF EXISTS cuenta;
+DROP TABLE IF EXISTS cliente;
+___________________________________
+--crear tablas en sql
+
+-- Crear tabla cliente
+CREATE TABLE cliente (
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    nombre     VARCHAR(100) NOT NULL,
+    cedula     VARCHAR(20)  NOT NULL UNIQUE
+);
+
+-- Crear tabla cuenta
+CREATE TABLE cuenta (
+    id_cuenta  INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    tipo       ENUM('corriente', 'ahorro', 'cdt') NOT NULL,
+    saldo      DOUBLE DEFAULT 0,
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente)
+);
+
+-- Crear tabla transaccion
+CREATE TABLE transaccion (
+    id_transaccion INT AUTO_INCREMENT PRIMARY KEY,
+    id_cuenta      INT NOT NULL,
+    tipo           VARCHAR(50) NOT NULL,
+    monto          DOUBLE NOT NULL,
+    fecha          DATETIME DEFAULT NOW(),
+    FOREIGN KEY (id_cuenta) REFERENCES cuenta(id_cuenta)
+);
+__________________________________________________________
+1. Consultas SELECT
+-- Ver todos los clientes
+SELECT * FROM cliente;
+
+-- Ver todas las cuentas
+SELECT * FROM cuenta;
+
+-- Ver todas las transacciones
+SELECT * FROM transaccion;
+________________________________________
+2. Filtros con WHERE
+-- Buscar cliente por cédula
+SELECT * FROM cliente
+WHERE cedula = '123456789';
+
+-- Ver cuentas de tipo ahorro
+SELECT * FROM cuenta
+WHERE tipo = 'ahorro';
+
+-- Ver transacciones mayores a 100
+SELECT * FROM transaccion
+WHERE monto > 100;
+________________________________________
+3. JOIN entre tablas
+-- Cliente con sus cuentas
+SELECT c.nombre, cu.id_cuenta, cu.tipo, cu.saldo
+FROM cliente c
+JOIN cuenta cu ON c.id_cliente = cu.id_cliente;
+
+-- Cuentas con transacciones
+SELECT cu.id_cuenta, t.tipo, t.monto, t.fecha
+FROM cuenta cu
+JOIN transaccion t ON cu.id_cuenta = t.id_cuenta;
+
+-- Cliente + cuenta + transacción (consulta completa)
+SELECT c.nombre, cu.tipo, cu.saldo, t.tipo AS tipo_transaccion, t.monto, t.fecha
+FROM cliente c
+JOIN cuenta cu ON c.id_cliente = cu.id_cliente
+JOIN transaccion t ON cu.id_cuenta = t.id_cuenta;
+________________________________________
+
+
+4. Agrupación con GROUP BY
+-- Número de cuentas por cliente
+SELECT id_cliente, COUNT(*) AS total_cuentas
+FROM cuenta
+GROUP BY id_cliente;
+
+-- Número de transacciones por cuenta
+SELECT id_cuenta, COUNT(*) AS total_transacciones
+FROM transaccion
+GROUP BY id_cuenta;
+________________________________________
+5. Funciones SUM y COUNT
+-- Total de dinero por cuenta
+SELECT id_cuenta, SUM(monto) AS total_movimientos
+FROM transaccion
+GROUP BY id_cuenta;
+
+-- Total de transacciones registradas
+SELECT COUNT(*) AS total_transacciones
+FROM transaccion;
+
+-- Saldo total por cliente
+SELECT c.nombre, SUM(cu.saldo) AS saldo_total
+FROM cliente c
+JOIN cuenta cu ON c.id_cliente = cu.id_cliente
+GROUP BY c.nombre;
+
